@@ -1,6 +1,5 @@
 import { getStartingDecks } from "./gameplay";
 
-
 export class Game {
     private player1: Player;
     private player2: Player;
@@ -50,6 +49,7 @@ export class Player {
     constructor(deck: Deck) {
         this.deck = deck;
         this.hand = new Hand();
+        this.drawCards();
     }
 
     drawCards(): void {
