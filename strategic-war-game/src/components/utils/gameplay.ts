@@ -16,16 +16,39 @@ export function createDeck(): Deck {
         CardValue.Seven, CardValue.Eight, CardValue.Nine, CardValue.Ten,
         CardValue.Jack, CardValue.Queen, CardValue.King, CardValue.Ace
     ];
-    
-    const cards: Card[] = [];
 
+    const suitNames: { [key in Suit]: string } = {
+        [Suit.clubs]: 'C',
+        [Suit.spades]: 'S',
+        [Suit.diamonds]: 'D',
+        [Suit.hearts]: 'H'
+    };
+
+    const valueNames: { [key in CardValue]: string } = {
+        [CardValue.Two]: '2',
+        [CardValue.Three]: '3',
+        [CardValue.Four]: '4',
+        [CardValue.Five]: '5',
+        [CardValue.Six]: '6',
+        [CardValue.Seven]: '7',
+        [CardValue.Eight]: '8',
+        [CardValue.Nine]: '9',
+        [CardValue.Ten]: 'T',
+        [CardValue.Jack]: 'J',
+        [CardValue.Queen]: 'Q',
+        [CardValue.King]: 'K',
+        [CardValue.Ace]: 'A'
+    };
+
+    const cards: Card[] = [];
     for (const suit of suits) {
         for (const value of values) {
-            cards.push({ value, suit });
+            const faceSkinFilePath = `${valueNames[value]}${suitNames[suit]}.svg`;
+            const backSkinFilePath = 'back.svg';
+            cards.push({ value, suit, skin: { faceSkinFilePath, backSkinFilePath } });
         }
     }
-
-    return {cards};
+    return { cards };
 }
 
 export function splitDeck(deck: Deck): Deck[] {
