@@ -6,20 +6,20 @@ import { Col, Row } from 'react-bootstrap';
 const GamePage: React.FC = () => {
     const [game] = useState<Game>(new Game());
     const [gameState, setGameState] = useState<GameState>(GameState.PickCard);
-    const [player1SelectedCard, setPlayer1SelectedCard] = useState<Card | null>(null);
-    const [player2SelectedCard, setPlayer2SelectedCard] = useState<Card | null>(null);
+    const [player1SelectedCard, setPlayer1SelectedCard] = useState<Card | undefined>(undefined);
+    const [player2SelectedCard, setPlayer2SelectedCard] = useState<Card | undefined>(undefined);
     const [battlePile, setBattlePile] = useState<Card[]>([]);
 
     const waitTimeInMS = 3000;
 
-    function player2PickRandomCard(): Card | null {
+    function player2PickRandomCard(): Card | undefined {
         const player2 = game.getPlayer2();
         const hand = player2.getHand().getCards();
 
         const randomIndex = Math.floor(Math.random() * hand.length);
         const card = player2.playCard(randomIndex);
 
-        return card || null;
+        return card;
     }
 
     function delay(ms: number = waitTimeInMS): Promise<void> {
@@ -28,22 +28,20 @@ const GamePage: React.FC = () => {
 
     const handleCardSelection = (index: number) => {
         if (gameState !== GameState.PickCard) return;
+        setGameState(GameState.Battle);
 
         const player1 = game.getPlayer1();
         const card = player1.playCard(index);
         const card2 = player2PickRandomCard();
-        if (card) {
-            setPlayer1SelectedCard(card);
-            setPlayer2SelectedCard(card2);
+        setPlayer1SelectedCard(card);
+        setPlayer2SelectedCard(card2);
 
-            handleBattleState();
-        }
+        handleBattleState();
+
     };
 
     const handleBattleState = async () => {
         if (!player1SelectedCard || !player2SelectedCard) return;
-        console.log('start battle state');
-        setGameState(GameState.Battle);
         setBattlePile([player1SelectedCard, player2SelectedCard]);
 
         await delay();
@@ -62,11 +60,9 @@ const GamePage: React.FC = () => {
         }
 
         handlePickCardState();
-        console.log('leave battle state');
     };
 
     async function initiateDrawBattle(player1: Player, player2: Player) {
-        console.log('start draw battle');
         while (true) {
             if (player1.getDeck().cards.length === 0) {
                 game.setWinner(Winner.Player2);
