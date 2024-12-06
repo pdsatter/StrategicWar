@@ -29,20 +29,25 @@ const GamePage: React.FC = () => {
     const handleCardSelection = (index: number) => {
         if (gameState !== GameState.PickCard) return;
         setGameState(GameState.Battle);
-
+        
         const player1 = game.getPlayer1();
-        const card = player1.playCard(index);
-        const card2 = player2PickRandomCard();
-        setPlayer1SelectedCard(card);
-        setPlayer2SelectedCard(card2);
+        const player1Card = player1.playCard(index);
+        const player2Card = player2PickRandomCard();
 
-        handleBattleState();
+        if (!player1Card || !player2Card) return;
 
+        setPlayer1SelectedCard(player1Card);
+        setPlayer2SelectedCard(player2Card);
+
+        handleBattleState(player1Card, player2Card);
+        console.log('finish card selection');
     };
 
-    const handleBattleState = async () => {
-        if (!player1SelectedCard || !player2SelectedCard) return;
-        setBattlePile([player1SelectedCard, player2SelectedCard]);
+    const handleBattleState = async (player1Card: Card, player2Card: Card) => {
+        console.log('selected card ');
+        console.log('start battle state');
+        setGameState(GameState.Battle);
+        setBattlePile([player1Card, player2Card]);
 
         await delay();
 
@@ -51,18 +56,20 @@ const GamePage: React.FC = () => {
         const player1Deck = player1.getDeck();
         const player2Deck = player2.getDeck();
 
-        if (player1SelectedCard.value > player2SelectedCard.value) {
+        if (player1Card.value > player2Card.value) {
             player1Deck.cards.push(...battlePile);
-        } else if (player1SelectedCard.value < player2SelectedCard.value) {
+        } else if (player1Card.value < player2Card.value) {
             player2Deck.cards.push(...battlePile);
         } else {
             await initiateDrawBattle(player1, player2);
         }
 
         handlePickCardState();
+        console.log('leave battle state');
     };
 
     async function initiateDrawBattle(player1: Player, player2: Player) {
+        console.log('start draw battle');
         while (true) {
             if (player1.getDeck().cards.length === 0) {
                 game.setWinner(Winner.Player2);
