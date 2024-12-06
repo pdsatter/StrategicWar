@@ -139,3 +139,8 @@ export enum Winner {
     Player1 = 1,
     Player2 = 2
 }
+
+export enum GameState {
+    PickCard = 0,
+    Battle = 1,
+}

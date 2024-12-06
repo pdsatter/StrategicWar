@@ -1,12 +1,101 @@
-import React from 'react';
-import { Game, Deck, Card } from '../utils/classes';
+import React, { useState } from 'react';
+import { Game, Deck, Card, GameState, Winner, Player } from '../utils/classes';
 import { Col, Row } from 'react-bootstrap';
 
 
 const GamePage: React.FC = () => {
-    const game = new Game();
+    const [game] = useState<Game>(new Game());
+    const [gameState, setGameState] = useState<GameState>(GameState.PickCard);
+    const [player1SelectedCard, setPlayer1SelectedCard] = useState<Card | null>(null);
+    const [player2SelectedCard, setPlayer2SelectedCard] = useState<Card | null>(null);
+    const [battlePile, setBattlePile] = useState<Card[]>([]);
 
-    const renderCard = (card: Card, showFace: boolean) => {
+    function player2PickRandomCard(): Card | null {
+        const player2 = game.getPlayer2();
+        const hand = player2.getHand().getCards();
+
+        const randomIndex = Math.floor(Math.random() * hand.length);
+        const card = player2.playCard(randomIndex);
+
+        return card || null;
+    }
+
+    const handleCardSelection = (index: number) => {
+        if (gameState !== GameState.PickCard) return;
+
+        const player1 = game.getPlayer1();
+        const card = player1.playCard(index);
+        const card2 = player2PickRandomCard();
+        if (card) {
+            setPlayer1SelectedCard(card);
+            setPlayer2SelectedCard(card2);
+
+            handleBattleState();
+        }
+    };
+
+    function handleBattleState() {
+        if (!player1SelectedCard || !player2SelectedCard) return;
+
+        setBattlePile([player1SelectedCard, player2SelectedCard]);
+
+        const player1 = game.getPlayer1();
+        const player2 = game.getPlayer2();
+        const player1Deck = player1.getDeck();
+        const player2Deck = player2.getDeck();
+
+        if (player1SelectedCard.value > player2SelectedCard.value) {
+            player1Deck.cards.push(...battlePile);
+        } else if (player1SelectedCard.value < player2SelectedCard.value) {
+            player2Deck.cards.push(...battlePile);
+        } else {
+            initiateDrawBattle(player1, player2);
+        }
+
+        setGameState(GameState.PickCard);
+        handlePickCardState();
+    }
+
+    function initiateDrawBattle(player1: Player, player2: Player) {
+        while (true) {
+            if (player1.getDeck().cards.length === 0) {
+                game.setWinner(Winner.Player2);
+                break;
+            }
+
+            if (player2.getDeck().cards.length === 0) {
+                game.setWinner(Winner.Player1);
+                break;
+            }
+
+            const player1DrawCard = player1.getDeck().cards.shift();
+            const player2DrawCard = player2.getDeck().cards.shift();
+
+            if (player1DrawCard && player2DrawCard) {
+                battlePile.push(player1DrawCard, player2DrawCard);
+
+                if (player1DrawCard.value > player2DrawCard.value) {
+                    player1.getDeck().cards.push(...battlePile);
+                    break;
+                } else if (player1DrawCard.value < player2DrawCard.value) {
+                    player2.getDeck().cards.push(...battlePile);
+                    break;
+                }
+            }
+        }
+    }
+
+    function handlePickCardState() {
+        setGameState(GameState.PickCard);
+        game.determineWinner();
+        const player1 = game.getPlayer1();
+        const player2 = game.getPlayer2();
+
+        player1.drawCards();
+        player2.drawCards();
+    }
+
+    const renderCard = (card: Card, showFace: boolean, onClick?: () => void) => {
         const imagePath = showFace
             ? `/card-images/${card.skin?.faceSkinFilePath}`
             : `/card-images/${card.skin?.backSkinFilePath}`;
@@ -17,10 +106,10 @@ const GamePage: React.FC = () => {
                 src={imagePath}
                 alt={`${card.value} of ${card.suit}`}
                 style={{ width: '100px', margin: '10px', border: '1px solid black' }}
+                onClick={onClick}
             />
         );
     };
-
 
     const renderDeck = (deck: Deck) => {
         return (
@@ -65,7 +154,9 @@ const GamePage: React.FC = () => {
                 <Row>
                     <Col xs={2}></Col>
                     <Col xs={6} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                        {game.getPlayer1().getHand().getCards().map(card => renderCard(card, true))}
+                        {game.getPlayer1().getHand().getCards().map((card, index) =>
+                            renderCard(card, true, () => handleCardSelection(index))
+                        )}
                     </Col>
                     <Col xs={2} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                         {renderDeck(game.getPlayer1().getDeck())}
@@ -73,6 +164,14 @@ const GamePage: React.FC = () => {
                     <Col xs={2}></Col>
                 </Row>
             </div>
+
+            {gameState === GameState.Battle && player1SelectedCard && (
+                <div>
+                    <h2>Battle State</h2>
+                    {player1SelectedCard && renderCard(player1SelectedCard, true)}
+                    {player2SelectedCard && renderCard(player2SelectedCard, true)}
+                </div>
+            )}
         </>
     );
 }

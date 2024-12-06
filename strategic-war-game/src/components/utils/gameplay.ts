@@ -66,4 +66,10 @@ export function getStartingDecks(): Deck[] {
     return splitDeck(startingDeck);
 }
 
+export function PickCardActions() {
+    
+}
 
+export function SelectCard() {
+
+}
