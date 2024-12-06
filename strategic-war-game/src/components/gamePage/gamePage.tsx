@@ -29,7 +29,7 @@ const GamePage: React.FC = () => {
     const handleCardSelection = (index: number) => {
         if (gameState !== GameState.PickCard) return;
         setGameState(GameState.Battle);
-        
+
         const player1 = game.getPlayer1();
         const player1Card = player1.playCard(index);
         const player2Card = player2PickRandomCard();
@@ -40,12 +40,9 @@ const GamePage: React.FC = () => {
         setPlayer2SelectedCard(player2Card);
 
         handleBattleState(player1Card, player2Card);
-        console.log('finish card selection');
     };
 
     const handleBattleState = async (player1Card: Card, player2Card: Card) => {
-        console.log('selected card ');
-        console.log('start battle state');
         setGameState(GameState.Battle);
         setBattlePile([player1Card, player2Card]);
 
@@ -65,11 +62,9 @@ const GamePage: React.FC = () => {
         }
 
         handlePickCardState();
-        console.log('leave battle state');
     };
 
     async function initiateDrawBattle(player1: Player, player2: Player) {
-        console.log('start draw battle');
         while (true) {
             if (player1.getDeck().cards.length === 0) {
                 game.setWinner(Winner.Player2);
@@ -104,8 +99,6 @@ const GamePage: React.FC = () => {
     }
 
     function handlePickCardState() {
-        console.log('start pick card state');
-
         setGameState(GameState.PickCard);
         game.determineWinner();
         const player1 = game.getPlayer1();
@@ -113,7 +106,6 @@ const GamePage: React.FC = () => {
 
         player1.drawCards();
         player2.drawCards();
-        console.log('end pick card state.');
     }
 
     const renderCard = (card: Card, showFace: boolean, onClick?: () => void) => {
